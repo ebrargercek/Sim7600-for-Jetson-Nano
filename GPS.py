@@ -1,26 +1,17 @@
-## GPS LOCATION READING WITH SIM7600G AND JETSON GPIO
-
-This Python script allows you to use the SIM7600G GSM module to read GPS location data. 
-
-### Required Libraries:
-- Jetson.GPIO
-- pySerial
-
-```python
 import Jetson.GPIO as GPIO
 import serial
 import time
 import logging
 
-
+# Loglama ayarları
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-
+# Seri port ve güç anahtarı konfigürasyonu
 SERIAL_PORT = '/dev/ttyUSB2'
 BAUD_RATE = 115200
 POWER_KEY = 6
 
-
+# Seri portu açma
 ser = serial.Serial(SERIAL_PORT, BAUD_RATE)
 ser.flushInput()
 
