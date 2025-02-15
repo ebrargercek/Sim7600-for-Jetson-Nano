@@ -1,49 +1,87 @@
-Devices and Components
-**Jetson GPIO**
-Jetson platform is a powerful development platform developed by NVIDIA, used for AI and robotics projects. 
-The GPIO (General Purpose Input/Output) pins are used to control physical devices on this platform.
-In this project, the Jetson GPIO module is used for power management of the SIM7600G GSM module.
+import Jetson.GPIO as GPIO
+import serial
+import time
+import logging
 
 
-**SIM7600G GSM Module**
-The SIM7600G is a 4G LTE capable GSM module.
-It provides services such as making phone calls, sending SMS, and establishing data connections.
-In this project, AT commands are used to control the power on/off of the GSM module and to make phone calls.
-Connection Type: Serial port (UART)
-Supported Connections: 4G LTE, 3G, 2G
-Features: Phone calls, SMS, data transmission, internet connectivity
-
-
-**Jetson Nano**
-The Jetson Nano is a small, low-cost development board produced by NVIDIA. 
-It is designed for robotics projects, AI applications, and deep learning tasks.
-In this project, Jetson Nano's GPIO pins are used to control the SIM7600G GSM module.
-Features: ARM Cortex-A57 CPU, 128 CUDA cores GPU, 4GB RAM, Linux-based operating system
-Connection Types: USB, Ethernet, GPIO
-
-
-**Serial Port (UART)**
-The serial port is a communication method used for data transmission between devices.
-In this project, a serial connection (UART) is used to communicate with the SIM7600G GSM module. 
-The module is controlled using AT commands.
-Connection: /dev/ttyUSB2
-Baud Rate: 115200
-
-
-**Jetson GPIO and Power Control**
-Jetson GPIO is used for controlling various physical components. 
-In this project, one of the GPIO pins is used to control the power switch of the SIM7600G GSM module. 
-This is essential for turning the module on and off.
-Pin: GPIO 6 (Power Key)
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 
-**PROJECT OVERVIEW: GSM CALL CONTROL WITH JETSON NANO AND SIM7600G MODULE**
-This project enables making phone calls using Jetson GPIO and the SIM7600G GSM module. 
-The Jetson Nano is a powerful AI development platform, and its GPIO pins are used for power management of the SIM7600G GSM module.
-The SIM7600G is a module that provides 4G LTE connectivity and can make phone calls. 
-Communication with this module is established through a serial port (UART). 
-GPIO pin 6 is used to control the power switch of the module. 
-This project utilizes AT commands to perform basic communication and control functions with the GSM module on the Jetson platform.
+PHONE_NUMBER = ''   
+POWER_KEY = 6
+BAUD_RATE = 115200
+SERIAL_PORT = '/dev/ttyUSB2'
 
+# Seri port yapılandırması
+try:
+    ser = serial.Serial(SERIAL_PORT, BAUD_RATE)
+    ser.flushInput()
+except serial.SerialException as e:
+    logging.error(f"Seri port açma hatası: {e}")
+    raise
 
+def send_at(command, expected_response, timeout):
+    """AT komutunu gönderir ve cevabı kontrol eder."""
+    rec_buff = ''
+    try:
+        ser.write((command + '\r\n').encode())
+        time.sleep(timeout)
+        
+        if ser.inWaiting():
+            time.sleep(0.01)
+            rec_buff = ser.read(ser.inWaiting()).decode()
+        
+        if expected_response not in rec_buff:
+            logging.error(f"{command} ERROR: {rec_buff}")
+            return False
+        else:
+            logging.info(f"{command} response: {rec_buff}")
+            return True
+    except Exception as e:
+        logging.error(f"AT komutu gönderme hatası: {e}")
+        return False
+
+def power_on():
+    """Modülü açar."""
+    logging.info('SIM7600G is starting...')
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setwarnings(False)
+    GPIO.setup(POWER_KEY, GPIO.OUT)
+    time.sleep(0.1)
+    GPIO.output(POWER_KEY, GPIO.HIGH)
+    time.sleep(2)
+    GPIO.output(POWER_KEY, GPIO.LOW)
+    time.sleep(20)
+    ser.flushInput()
+    logging.info('SIM7600G is ready')
+
+def power_down():
+    """Modülü kapatır."""
+    logging.info('SIM7600G is logging off...')
+    GPIO.output(POWER_KEY, GPIO.HIGH)
+    time.sleep(3)
+    GPIO.output(POWER_KEY, GPIO.LOW)
+    time.sleep(18)
+    logging.info('Goodbye')
+
+def make_call(phone_number):
+    """Telefon araması başlatır ve kapatır."""
+    if send_at(f'ATD{phone_number};', 'OK', 1):
+        logging.info('Calling...')
+        time.sleep(100)  # Aramanın 100 saniye sürmesini bekler
+        send_at('AT+CHUP', 'OK', 1)  # Çağrıyı kapatır
+        logging.info('Call disconnected')
+    else:
+        logging.error('Failed to initiate call')
+
+try:
+    power_on()
+    make_call(PHONE_NUMBER)
+except Exception as e:
+    logging.error(f"An error occurred: {e}")
+finally:
+    power_down()
+    if ser:
+        ser.close()
+    GPIO.cleanup()
