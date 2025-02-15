@@ -3,15 +3,15 @@ import serial
 import time
 import logging
 
-# Loglama ayarları
+
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# Seri port ve güç anahtarı konfigürasyonu
+
 SERIAL_PORT = '/dev/ttyUSB2'
 BAUD_RATE = 115200
 POWER_KEY = 6
 
-# Seri portu açma
+
 ser = serial.Serial(SERIAL_PORT, BAUD_RATE)
 ser.flushInput()
 
