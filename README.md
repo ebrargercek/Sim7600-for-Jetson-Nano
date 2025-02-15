@@ -39,11 +39,3 @@ This is essential for turning the module on and off.
 Pin: GPIO 6 (Power Key)
 
 
-
-**PROJECT OVERVIEW: GSM CALL CONTROL WITH JETSON NANO AND SIM7600G MODULE**
-This project enables making phone calls using Jetson GPIO and the SIM7600G GSM module. 
-The Jetson Nano is a powerful AI development platform, and its GPIO pins are used for power management of the SIM7600G GSM module.
-The SIM7600G is a module that provides 4G LTE connectivity and can make phone calls. 
-Communication with this module is established through a serial port (UART). 
-GPIO pin 6 is used to control the power switch of the module. 
-This project utilizes AT commands to perform basic communication and control functions with the GSM module on the Jetson platform.
