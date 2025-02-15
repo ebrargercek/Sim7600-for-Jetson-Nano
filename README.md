@@ -1,4 +1,6 @@
 Devices and Components
+
+
 **1-Jetson GPIO**
 Jetson platform is a powerful development platform developed by NVIDIA, used for AI and robotics projects. 
 The GPIO (General Purpose Input/Output) pins are used to control physical devices on this platform.
